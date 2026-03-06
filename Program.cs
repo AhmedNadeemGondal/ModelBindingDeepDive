@@ -17,31 +17,47 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Welcome to the home page.");
     });
 
-    endpoints.MapGet("/employees", async (HttpContext context) =>
-    {
-        // Get all of the employees' information
-        var employees = EmployeesRepository.GetEmployees();
+    //endpoints.MapGet("/employees", async (HttpContext context) =>
+    //{
+    //    // Get all of the employees' information
+    //    var employees = EmployeesRepository.GetEmployees();
 
-        context.Response.ContentType = "text/html";
-        await context.Response.WriteAsync("<h2>Employees</h2>");
-        await context.Response.WriteAsync("<ul>");
-        foreach (var employee in employees)
+    //    context.Response.ContentType = "text/html";
+    //    await context.Response.WriteAsync("<h2>Employees</h2>");
+    //    await context.Response.WriteAsync("<ul>");
+    //    foreach (var employee in employees)
+    //    {
+    //        await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+    //    }
+    //    await context.Response.WriteAsync("</ul>");
+
+    //});
+    ////endpoints.MapGet("/employees/{id:int}", (int id) => // This is implicit binding
+    ////endpoints.MapGet("/employees/{id:int}", ([FromRoute]int id) => // This is explicit binding to the route using the parameter name
+    //endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")]int identityNum) => // This is explicit binding to the route using an explicit name
+    ////endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")] DateTime identityNum) => // Type mismatch will raise a 400 error, types and options should match exactly
+    //{
+    //    //return identityNum; // coe for 400 error code type mistach reproduction in the route parameter and endpoint model binding
+    //    // 
+    //    var employee = EmployeesRepository.GetEmployeeById(identityNum);
+
+    //    return employee;
+    //});
+
+    // The above two endpoints are commented so the one below works
+
+    //endpoints.MapGet("/employees",  (int id) => // this template will bind a query ?id=2 to the the endpoint handler parameter int id
+    endpoints.MapGet("/employees",  ([FromQuery(Name = "id")] int? identityNum) => // this is now explicit binding using the decorator
+    // It's usually best practice to have an optional parameters when working with query strings.
+    {
+        if (identityNum.HasValue)
         {
-            await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+            var employee = EmployeesRepository.GetEmployeeById(identityNum.Value);
+
+            return employee;
         }
-        await context.Response.WriteAsync("</ul>");
-
-    });
-    //endpoints.MapGet("/employees/{id:int}", (int id) => // This is implicit binding
-    //endpoints.MapGet("/employees/{id:int}", ([FromRoute]int id) => // This is explicit binding to the route using the parameter name
-    endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")]int identityNum) => // This is explicit binding to the route using an explicit name
-    //endpoints.MapGet("/employees/{id:int}", ([FromRoute (Name = "id")] DateTime identityNum) => // Type mismatch will raise a 400 error, types and options should match exactly
-    {
-        //return identityNum; // coe for 400 error code type mistach reproduction in the route parameter and endpoint model binding
-        // 
-        var employee = EmployeesRepository.GetEmployeeById(identityNum);
-
-        return employee;
+        return null;
+     
     });
 
     endpoints.MapPost("/employees", async (HttpContext context) =>

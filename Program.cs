@@ -1,5 +1,3 @@
-
-
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 //using WebApp.Models;
@@ -47,47 +45,60 @@ app.UseEndpoints(endpoints =>
     // The above two endpoints are commented so the one below works
 
     //endpoints.MapGet("/employees",  (int id) => // this template will bind a query ?id=2 to the the endpoint handler parameter int id
-    endpoints.MapGet("/employees",  ([FromQuery(Name = "id")] int? identityNum) => // this is now explicit binding using the decorator
+    //endpoints.MapGet("/employees",  ([FromQuery(Name = "id")] int? identityNum) => // this is now explicit binding using the decorator
     // It's usually best practice to have an optional parameters when working with query strings.
-    {
-        if (identityNum.HasValue)
-        {
-            var employee = EmployeesRepository.GetEmployeeById(identityNum.Value);
+    //{
+    //    if (identityNum.HasValue)
+    //    {
+    //        var employee = EmployeesRepository.GetEmployeeById(identityNum.Value);
 
-            return employee;
-        }
-        return null;
-     
+    //        return employee;
+    //    }
+    //    return null;
+
+    //});
+
+
+    //Bind from http header
+    //endpoints.MapGet("/employees", ([FromHeader] int id) => // Header binding always has to be explicit
+    endpoints.MapGet("/employees", ([FromHeader(Name = "Identity")] int id) => // Header binding with named header
+    {
+
+        var employee = EmployeesRepository.GetEmployeeById(id);
+
+        return employee;
+
+
     });
 
     endpoints.MapPost("/employees", async (HttpContext context) =>
-    {
-        using var reader = new StreamReader(context.Request.Body);
-        var body = await reader.ReadToEndAsync();
-
-        try
         {
-            var employee = JsonSerializer.Deserialize<Employee>(body);
+            using var reader = new StreamReader(context.Request.Body);
+            var body = await reader.ReadToEndAsync();
 
-            if (employee is null || employee.Id <= 0)
+            try
+            {
+                var employee = JsonSerializer.Deserialize<Employee>(body);
+
+                if (employee is null || employee.Id <= 0)
+                {
+                    context.Response.StatusCode = 400;
+                    return;
+                }
+
+                EmployeesRepository.AddEmployee(employee);
+
+                context.Response.StatusCode = 201;
+                await context.Response.WriteAsync("Employee added successfully.");
+            }
+            catch (Exception ex)
             {
                 context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(ex.ToString());
                 return;
             }
 
-            EmployeesRepository.AddEmployee(employee);
-
-            context.Response.StatusCode = 201;
-            await context.Response.WriteAsync("Employee added successfully.");
-        }
-        catch (Exception ex)
-        {
-            context.Response.StatusCode = 400;
-            await context.Response.WriteAsync(ex.ToString());
-            return;
-        }
-
-    });
+        });
 
     endpoints.MapPut("/employees", async (HttpContext context) =>
     {

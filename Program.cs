@@ -81,6 +81,18 @@ app.UseEndpoints(endpoints =>
 
     });
 
+    //endpoints.MapGet("/employees", ([FromQuery(Name ="id")]int[] ids) => // using query of the form ?id=1&id=2 we can send an array from the client
+    endpoints.MapGet("/employees", ([FromHeader(Name ="id")]int[] ids) => // using header with multiple ids we can send an array from the client
+    {
+
+        var employees = EmployeesRepository.GetEmployees();
+        var emps = employees.Where(x => ids.Contains(x.Id)).ToList();
+        return emps;
+
+
+    });
+
+
     endpoints.MapPost("/employees", async (HttpContext context) =>
         {
             using var reader = new StreamReader(context.Request.Body);

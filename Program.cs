@@ -61,10 +61,20 @@ app.UseEndpoints(endpoints =>
 
     //Bind from http header
     //endpoints.MapGet("/employees", ([FromHeader] int id) => // Header binding always has to be explicit
-    endpoints.MapGet("/employees", ([FromHeader(Name = "Identity")] int id) => // Header binding with named header
+    //endpoints.MapGet("/employees/{id:int}", (int id, [FromQuery] string name, [FromHeader] string position) => // We can use multiple bindings
+    endpoints.MapGet("/employees/{id:int}", ([AsParameters] GetEmployeeParameters param) => // We can use multiple bindings with the help of a class
+    // struct or something similar, in this case a GetEmployeeParameters class.
+    // This does not make sense but is done for demonstration.
     {
 
-        var employee = EmployeesRepository.GetEmployeeById(id);
+        var employee = EmployeesRepository.GetEmployeeById(param.Id);
+        if (employee != null)
+        {
+            employee.Name = param.Name;
+            employee.Position = param.Position;
+        }
+
+
 
         return employee;
 
@@ -150,6 +160,19 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
+
+class GetEmployeeParameters
+{
+    [FromRoute]
+    public int Id { get; set; }
+
+    [FromQuery]
+    public string Name { get; set; }
+
+    [FromHeader]
+    public string Position { get; set; }
+}
 
 public static class EmployeesRepository
 {

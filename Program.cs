@@ -66,60 +66,44 @@ app.UseEndpoints(endpoints =>
     // struct or something similar, in this case a GetEmployeeParameters class.
     // This does not make sense but is done for demonstration.
     {
-
         var employee = EmployeesRepository.GetEmployeeById(param.Id);
         if (employee != null)
         {
             employee.Name = param.Name;
             employee.Position = param.Position;
         }
-
-
-
         return employee;
-
-
     });
 
     //endpoints.MapGet("/employees", ([FromQuery(Name ="id")]int[] ids) => // using query of the form ?id=1&id=2 we can send an array from the client
-    endpoints.MapGet("/employees", ([FromHeader(Name ="id")]int[] ids) => // using header with multiple ids we can send an array from the client
+    endpoints.MapGet("/employees", ([FromHeader(Name = "id")] int[] ids) => // using header with multiple ids we can send an array from the client
     {
-
         var employees = EmployeesRepository.GetEmployees();
         var emps = employees.Where(x => ids.Contains(x.Id)).ToList();
         return emps;
-
-
     });
 
-
-    endpoints.MapPost("/employees", async (HttpContext context) =>
+    // The most important things to note here are
+    // 1. We are not explicitly parsing the json using a serializer.
+    // 2. The framework looks at the class of the parameter and inferes the data it will bind to from the JSON body.
+    // 3. It then gets the data, parses it and binds the parameter to it.
+    // 4. Class types and Json keys should match exactly.
+    // For minimal API the body must be JSON, this is different from MVC and Razor pages
+    // Only one complex type is supported
+    endpoints.MapPost("/employees", (Employee employee) =>
         {
-            using var reader = new StreamReader(context.Request.Body);
-            var body = await reader.ReadToEndAsync();
+            // The following steps should be handled by the framework
+            //using var reader = new StreamReader(context.Request.Body);
+            //var body = await reader.ReadToEndAsync();
 
-            try
+            if (employee is null || employee.Id <= 0)
             {
-                var employee = JsonSerializer.Deserialize<Employee>(body);
-
-                if (employee is null || employee.Id <= 0)
-                {
-                    context.Response.StatusCode = 400;
-                    return;
-                }
-
-                EmployeesRepository.AddEmployee(employee);
-
-                context.Response.StatusCode = 201;
-                await context.Response.WriteAsync("Employee added successfully.");
-            }
-            catch (Exception ex)
-            {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsync(ex.ToString());
-                return;
+                return "Employee is not valid";
             }
 
+            EmployeesRepository.AddEmployee(employee);
+
+            return "Employee added successfully";
         });
 
     endpoints.MapPut("/employees", async (HttpContext context) =>
@@ -132,7 +116,7 @@ app.UseEndpoints(endpoints =>
         if (result)
         {
             context.Response.StatusCode = 204;
-            await context.Response.WriteAsync("Employee updated successfully.");
+            //await context.Response.WriteAsync("Employee updated successfully.");
             return;
         }
         else

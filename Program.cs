@@ -15,6 +15,14 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Welcome to the home page.");
     });
 
+    // The following code implements custom binding using the Person class
+    // The person calss has a BuildAsync mehtod that takes over and binds
+    // the parameter to the source defined in the class
+    endpoints.MapGet("/people", (Person? p) =>
+    {
+        return $"Id is {p?.Id}; Name is {p?.Name}";
+    });
+
     //endpoints.MapGet("/employees", async (HttpContext context) =>
     //{
     //    // Get all of the employees' information
@@ -156,6 +164,25 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
+
+class Person
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+
+    public static ValueTask<Person?> BindAsync(HttpContext context)
+    {
+        var idString = context.Request.Query["id"];
+        var nameString = context.Request.Query["name"];
+
+        if(int.TryParse(idString, out var id))
+        {
+            return new ValueTask<Person?>(new Person { Id =id, Name = nameString  });
+        }
+        return new ValueTask<Person?>(Task.FromResult<Person?>(null));
+    }
+}
 
 
 class GetEmployeeParameters

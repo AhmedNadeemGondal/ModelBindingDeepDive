@@ -14,3 +14,6 @@ This repository serves as a technical deep dive into the **ASP.NET Core Model Bi
 - **Value Providers:** Customizing how the framework sources data via `IValueProvider`.
 - **Type Conversion:** Handling specific parsing logic for custom structs or unique data types.
 - **Minimal APIs vs. Controllers:** Comparing binding behaviors and capabilities between traditional MVC controllers and modern Minimal API endpoints.
+
+### Credits
+Credit to **Frank Liu**. Check out his [video series](https://www.youtube.com/watch?v=F4dDe0SLjJM&list=PLgRlicSxjeMOXiYY7deqzO5qKdkg9wrqM&index=1&pp=iAQB) for the original walkthrough.
